@@ -2,6 +2,8 @@
  * (c) 2014 Andreas Rossberg
  *)
 
+open Onemel
+
 let name = "1ML"
 let version = "0.1"
 

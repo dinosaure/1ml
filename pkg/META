@@ -1,0 +1,6 @@
+description = "1ml"
+version = "%%VERSION%%"
+archive(byte) = "onemel.cma"
+archive(native) = "onemel.cmxa"
+plugin(byte) = "onemel.cma"
+plugin(native) = "onemel.cmxs"

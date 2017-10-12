@@ -1,0 +1,21 @@
+opam-version: "1.2"
+name:         "decompress"
+maintainer:   "Andreas Rossberg <rossberg@mpi-sws.org>"
+authors:      "Andreas Rossberg <rossberg@mpi-sws.org>"
+homepage:     "https://github.com/rossberg/1ml"
+bug-reports:  "https://github.com/rossberg/1ml/issues"
+dev-repo:     "https://github.com/rossberg/1ml.git"
+license:      "MIT"
+
+build: [
+  "ocaml" "pkg/pkg.ml" "build" "--pinned" "%{pinned}%" "--tests" "false"
+]
+
+depends: [
+  "ocamlbuild"     {build}
+  "ocamlfind"      {build}
+  "topkg"          {build}
+  "base-bytes"
+]
+
+available: [ocaml-version >= "4.03.0"]
