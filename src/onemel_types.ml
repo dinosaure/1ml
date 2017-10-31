@@ -6,7 +6,7 @@ type lab = string
 type var = string
 type level = int
 
-type varset = Fomega.VarSet.t
+type varset = Onemel_fomega.VarSet.t
 
 type 'a row = (lab * 'a) list
 
@@ -25,7 +25,7 @@ type kind =
 
 type typ =
   | VarT of var * kind
-  | PrimT of Prim.typ
+  | PrimT of Onemel_prim.typ
   | StrT of typ row
   | FunT of (var * kind) list * typ * extyp * feff
   | TypT of extyp
@@ -48,9 +48,10 @@ and undet =
   { id : int;
     mutable level : level;
     mutable vars : varset;
-    mutable il : Fomega.typ lazy_t option
+    mutable il : Onemel_fomega.typ lazy_t option
   }
 
+module Lib = Onemel_lib
 
 (* Path names *)
 
@@ -68,7 +69,7 @@ let rename_vars f aks = List.map (fun (a, k) -> f a, k) aks
 
 (* Variable Sets *)
 
-module VarSet = Fomega.VarSet
+module VarSet = Onemel_fomega.VarSet
 open VarSet
 
 let add_bind aks vs = List.fold_left (fun vs (a, k) -> add a vs) vs aks
@@ -249,7 +250,7 @@ let subst aks ts = List.map2 (fun (a, k) t -> a, t) aks ts
 
 let string_of_typ_fwd = ref (fun _ -> raise Not_found)
 
-let rename = Fomega.rename
+let rename = Onemel_fomega.rename
 
 let avoid1 a k su =
   if List.mem_assoc a su then
@@ -548,7 +549,7 @@ let string_of_feff_sort = function
 
 let rec string_of_typ_sort = function
   | VarT(a, k) -> "abstract"
-  | PrimT(t) -> Prim.string_of_typ t
+  | PrimT(t) -> Onemel_prim.string_of_typ t
   | StrT(r) -> "structure"
   | FunT(aks, t, s, f) -> string_of_feff_sort f ^ " function"
   | TypT(s) -> (if is_small_extyp s then "small" else "large") ^ " type"
@@ -594,7 +595,7 @@ let rec string_of_typ' prec = function
       paren base_prec prec (a ^ ":" ^ string_of_kind' base_prec k)
     else
       a
-  | PrimT(t) -> Prim.string_of_typ t
+  | PrimT(t) -> Onemel_prim.string_of_typ t
   | StrT(tr) ->
     (match as_tup_row tr with
     | Some ts ->
@@ -761,7 +762,7 @@ let rec print_typ' prec ctxt = function
     else
       print_string a
   | PrimT(t) ->
-    print_string (Prim.string_of_typ t)
+    print_string (Onemel_prim.string_of_typ t)
   | StrT(tr) ->
     (match as_tup_row tr with
     | Some ts ->

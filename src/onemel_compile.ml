@@ -2,8 +2,8 @@
  * (c) 2014 Andreas Rossberg
  *)
 
-module F = Fomega
-module L = Lambda
+module F = Onemel_fomega
+module L = Onemel_lambda
 
 (* Rows *)
 

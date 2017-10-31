@@ -2,7 +2,9 @@
  * (c) 2014 Andreas Rossberg
  *)
 
-open Source
+open Onemel_source
+
+module Lib = Onemel_lib
 
 type var = (string, unit) phrase
 
@@ -39,7 +41,7 @@ and dec' =
 and exp = (exp', unit) phrase
 and exp' =
   | VarE of var
-  | PrimE of Prim.const
+  | PrimE of Onemel_prim.const
   | TypE of typ
   | StrE of bind
   | FunE of var * typ * exp * impl
@@ -143,10 +145,10 @@ let ifE(e1, e2, e3, t) =
     letE(VarB(x'@@e1.at, e1)@@e1.at, e)
 
 let orE(e1, e2) =
-  ifE(e1, PrimE(Prim.BoolV(true))@@e1.at, e2,
+  ifE(e1, PrimE(Onemel_prim.BoolV(true))@@e1.at, e2,
     PrimT("bool")@@span[e1.at; e2.at])
 let andE(e1, e2) =
-  ifE(e1, e2, PrimE(Prim.BoolV(false))@@e1.at,
+  ifE(e1, e2, PrimE(Onemel_prim.BoolV(false))@@e1.at,
     PrimT("bool")@@span[e1.at; e2.at])
 
 let appE(e1, e2) =
@@ -408,7 +410,7 @@ and string_of_exp e =
   let node' = node (label_of_exp e) in
   match e.it with
   | VarE(x) -> node' [string_of_var x]
-  | PrimE(c) -> node' [Prim.string_of_const c]
+  | PrimE(c) -> node' [Onemel_prim.string_of_const c]
   | TypE(t) -> node' [string_of_typ t]
   | StrE(b) -> node' [string_of_bind b]
   | FunE(x, t, e, i) ->

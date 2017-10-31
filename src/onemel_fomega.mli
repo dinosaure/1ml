@@ -16,7 +16,7 @@ type kind =
 
 type typ =
   | VarT of var
-  | PrimT of Prim.typ
+  | PrimT of Onemel_prim.typ
   | ArrT of typ * typ
   | ProdT of typ row
   | AllT of var * kind * typ
@@ -30,7 +30,7 @@ type typ =
 
 type exp =
   | VarE of var
-  | PrimE of Prim.const
+  | PrimE of Onemel_prim.const
   | IfE of exp * exp * exp
   | LamE of var * typ * exp
   | AppE of exp * exp

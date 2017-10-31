@@ -2,25 +2,28 @@
  * (c) 2014 Andreas Rossberg
  *)
 
-open Source
-open Types
-open Env
-open Sub
-open Erase
+open Onemel_source
+open Onemel_types
+open Onemel_env
+open Onemel_sub
+open Onemel_erase
 
-module EL = Syntax
+module EL = Onemel_syntax
+module Trace = Onemel_trace
+module Lib = Onemel_lib
 
 exception Error of string
 
 let quote x = "`" ^ x ^ "'"
 
+module IL = Onemel_il
 
 (* Verification *)
 
 let verify_flag = ref false
 let verify_fomega_flag = ref true
 
-let (<<<) f x =
+let (<<<) f x = (* >>> (tuareg) *)
   if not !verify_flag then x else
   let at, env, s, zs, eo, label = f x in
   let prefix = "[" ^ label ^ "] " ^ string_of_region at ^ " " in
@@ -121,8 +124,9 @@ and paths_row ta ps = function
     let ts2 = paths_row ta (Lib.List.drop (List.length ts1) ps) tr in
     ts1 @ ts2
 
-
 (* Instantiation *)
+
+module Env = Onemel_env
 
 let rec instantiate env t e =
   match follow_typ t with
@@ -151,7 +155,7 @@ let elab_eff env eff =
 
 let rec elab_typ env typ l =
   Trace.elab (lazy ("[elab_typ] " ^ EL.label_of_typ typ));
-  (fun (s, zs) -> typ.at, env, s, zs, None, EL.label_of_typ typ) <<<
+  (fun (s, zs) -> typ.at, env, s, zs, None, EL.label_of_typ typ) <<< (* >>> (tuareg) *)
   match typ.it with
   | EL.PathT(exp) ->
     let t, zs = elab_pathexp env exp l in
@@ -169,7 +173,7 @@ let rec elab_typ env typ l =
     )
 
   | EL.PrimT(n) ->
-    (match Prim.typ_of_string n with
+    (match Onemel_prim.typ_of_string n with
     | Some t -> ExT([], PrimT(t)), []
     | None -> error typ.at "unknown primitive type"
     )
@@ -222,7 +226,7 @@ let rec elab_typ env typ l =
     let zs3 = try equal_extyp env s1 s2 with Sub e ->
       error typ.at (
         "inconsistent types equated by `as': " ^
-        Types.string_of_extyp s1 ^ " vs " ^ Types.string_of_extyp s2
+        string_of_extyp s1 ^ " vs " ^ string_of_extyp s2
       )
     in
     s1, lift_warn typ.at t1 (add_typs aks1 env) (zs1 @ zs2 @ zs3)
@@ -255,7 +259,7 @@ Trace.debug (lazy ("[WithT] ta = " ^ string_of_norm_typ ta));
 
 and elab_dec env dec l =
   Trace.elab (lazy ("[elab_dec] " ^ EL.label_of_dec dec));
-  (fun (s, zs) -> dec.at, env, s, zs, None, EL.label_of_dec dec) <<<
+  (fun (s, zs) -> dec.at, env, s, zs, None, EL.label_of_dec dec) <<< (* >>> (tuareg) *)
   match dec.it with
   | EL.VarD(var, typ) ->
     let l' = var.it in
@@ -309,11 +313,11 @@ and lookup_var env var =
     error var.at ("unbound identifier " ^ quote var.it)
 
 and elab_instvar env var =
-  (fun (t, zs, e) -> var.at, env, ExT([], t), zs, Some e, "InstVE") <<<
+  (fun (t, zs, e) -> var.at, env, ExT([], t), zs, Some e, "InstVE") <<< (* >>> (tuareg) *)
   instantiate env (lookup_var env var) (IL.VarE(var.it))
 
 and elab_prim_typ = function
-  | Prim.VarT -> VarT("a", BaseK)
+  | Onemel_prim.VarT -> VarT("a", BaseK)
   | t -> PrimT(t)
 
 and elab_prim_typs = function
@@ -321,11 +325,11 @@ and elab_prim_typs = function
   | ts -> StrT(tup_row (List.map elab_prim_typ ts))
 
 and elab_prim_fun f =
-  let t1 = elab_prim_typs (fst f.Prim.typ) in
-  let t2 = elab_prim_typs (snd f.Prim.typ) in
+  let t1 = elab_prim_typs (fst f.Onemel_prim.typ) in
+  let t2 = elab_prim_typs (snd f.Onemel_prim.typ) in
   let t = FunT([], t1, ExT([], t2), Explicit Impure) in
-  let e = IL.PrimE(Prim.FunV f) in
-  if Prim.is_poly f then
+  let e = IL.PrimE(Onemel_prim.FunV f) in
+  if Onemel_prim.is_poly f then
     let ta = TypT(ExT([], VarT("a", BaseK))) in
     FunT(["a", BaseK], ta, ExT([], t), Explicit Impure),
     IL.GenE("a", IL.BaseK, IL.LamE("_", erase_typ ta, e))
@@ -333,12 +337,12 @@ and elab_prim_fun f =
     t, e
 
 and elab_const = function
-  | Prim.FunV(f) -> elab_prim_fun f
-  | c -> PrimT(Prim.typ_of_const c), IL.PrimE(c)
+  | Onemel_prim.FunV(f) -> elab_prim_fun f
+  | c -> PrimT(Onemel_prim.typ_of_const c), IL.PrimE(c)
 
 and elab_exp env exp l =
   Trace.elab (lazy ("[elab_exp] " ^ EL.label_of_exp exp));
-  (fun (s, p, zs, e) -> exp.at, env, s, zs, Some e, EL.label_of_exp exp) <<<
+  (fun (s, p, zs, e) -> exp.at, env, s, zs, Some e, EL.label_of_exp exp) <<< (* >>> (tuareg) *)
   match exp.it with
   | EL.VarE(var) ->
 Trace.debug (lazy ("[VarE] x = " ^ var.it));
@@ -383,7 +387,7 @@ Trace.debug (lazy ("[FunE] env =" ^ VarSet.fold (fun a s -> s ^ " " ^ a) (domain
     let _, zs2, f =
       try sub_extyp env (ExT([], lookup_var env var)) s []
       with Sub e -> error exp.at
-        ("wrapped type does not match annotation: " ^ Sub.string_of_error e)
+        ("wrapped type does not match annotation: " ^ Onemel_sub.string_of_error e)
     in
     ExT([], WrapT(s)), Pure, lift_warn exp.at (WrapT(s)) env (zs1 @ zs2),
     IL.TupE["wrap", IL.AppE(f, IL.VarE(var.it))]
@@ -404,16 +408,16 @@ Trace.debug (lazy ("[FunE] env =" ^ VarSet.fold (fun a s -> s ^ " " ^ a) (domain
     let t0, zs0, ex = elab_instvar env var in
     let _ =
       match t0 with
-      | PrimT(Prim.BoolT) -> ()
-      | InferT(z) -> resolve_always z (PrimT(Prim.BoolT))
+      | PrimT(Onemel_prim.BoolT) -> ()
+      | InferT(z) -> resolve_always z (PrimT(Onemel_prim.BoolT))
       | _ -> error var.at "condition is not Boolean" in
     let ExT(aks, t) as s, zs = elab_typ env typ l in
     let s1, p1, zs1, e1 = elab_exp env exp1 l in
     let s2, p2, zs2, e2 = elab_exp env exp2 l in
     let _, zs3, f1 = try sub_extyp env s1 s [] with Sub e -> error exp1.at
-      ("branch type does not match annotation: " ^ Sub.string_of_error e) in
+      ("branch type does not match annotation: " ^ Onemel_sub.string_of_error e) in
     let _, zs4, f2 = try sub_extyp env s2 s [] with Sub e -> error exp2.at
-      ("branch type does not match annotation: " ^ Sub.string_of_error e) in
+      ("branch type does not match annotation: " ^ Onemel_sub.string_of_error e) in
     s, join_eff p1 p2,
     lift_warn exp.at t (add_typs aks env) (zs0 @ zs @ zs1 @ zs2 @ zs3 @ zs4),
     IL.IfE(ex, IL.AppE(f1, e1), IL.AppE(f2, e2))
@@ -461,7 +465,7 @@ Trace.debug (lazy ("[AppE] s1 = " ^ string_of_norm_extyp (ExT(aks1, t1))));
 Trace.debug (lazy ("[AppE] t2 = " ^ string_of_norm_typ t2));
     let ts, zs3, f =
       try sub_typ env t2 t1 (varTs aks1) with Sub e -> error var2.at
-        ("argument type does not match function: " ^ Sub.string_of_error e)
+        ("argument type does not match function: " ^ Onemel_sub.string_of_error e)
     in
 Trace.debug (lazy ("[AppE] ts = " ^ String.concat ", " (List.map string_of_norm_typ ts)));
     let ExT(aks2, t2) = s in
@@ -486,7 +490,7 @@ Trace.debug (lazy ("[AppE] ts = " ^ String.concat ", " (List.map string_of_norm_
 Trace.debug (lazy ("[UnwrapE] s1 = " ^ string_of_norm_extyp s1));
 Trace.debug (lazy ("[UnwrapE] s2 = " ^ string_of_norm_extyp s2));
     let _, zs3, f = try sub_extyp env s1 s2 [] with Sub e -> error exp.at
-      ("wrapped type does not match annotation: " ^ Sub.string_of_error e) in
+      ("wrapped type does not match annotation: " ^ Onemel_sub.string_of_error e) in
     s2, Impure, lift_warn exp.at t (add_typs aks env) (zs1 @ zs2 @ zs3),
     IL.AppE(f, IL.DotE(ex, "wrap"))
 
@@ -511,7 +515,7 @@ Trace.debug (lazy ("[UnwrapE] s2 = " ^ string_of_norm_extyp s2));
       let _, zs3, f =
         try sub_typ (add_typs aks2 env1) t2 t1 [] with Sub e -> error exp.at
           ("recursive expression does not match annotation: " ^
-            Sub.string_of_error e)
+            Onemel_sub.string_of_error e)
       in
       (* TODO: syntactic restriction *)
       s1, Pure, lift_warn exp.at t1 (add_typs aks2 env) (zs1 @ zs2 @ zs3),
@@ -522,7 +526,7 @@ Trace.debug (lazy ("[RecT] s1 = " ^ string_of_norm_extyp s1));
 Trace.debug (lazy ("[RecT] t2 = " ^ string_of_norm_typ t2));
       let ts, zs3, e =
         try sub_typ env1 t2 t1 (varTs aks1) with Sub e -> error typ.at
-          ("recursive type does not match annotation: " ^ Sub.string_of_error e)
+          ("recursive type does not match annotation: " ^ Onemel_sub.string_of_error e)
       in
 Trace.debug (lazy ("[RecT] ts = " ^ String.concat ", " (List.map string_of_norm_typ ts)));
       let t3, k3 = try make_rec_typ t1 with Recursive ->
@@ -555,7 +559,7 @@ t = !b:*. [= b] -> {t : [= t4.t b], u : !a:*. [= a] => [= (a, t4.u b a)]}
 
 and elab_bind env bind l =
   Trace.elab (lazy ("[elab_bind] " ^ EL.label_of_bind bind));
-  (fun (s, p, zs, e) -> bind.at, env, s, zs, Some e, EL.label_of_bind bind) <<<
+  (fun (s, p, zs, e) -> bind.at, env, s, zs, Some e, EL.label_of_bind bind) <<< (* >>> (tuareg) *)
   match bind.it with
   | EL.VarB(var, exp) ->
     let l' = var.it in
@@ -611,7 +615,7 @@ Trace.debug (lazy ("[SeqB] s = " ^ string_of_norm_extyp s));
     )
 
 and elab_genexp env exp l =
-  (fun (s, p, zs, e) -> exp.at, env, s, zs, Some e, "GenE") <<<
+  (fun (s, p, zs, e) -> exp.at, env, s, zs, Some e, "GenE") <<< (* >>> (tuareg) *)
   let level = level () in
   let a1 = freshen_var env "$" in
 Trace.debug (lazy ("[GenE] " ^ EL.string_of_exp exp));
@@ -638,7 +642,7 @@ Trace.debug (lazy ("[GenE] a1 = " ^ string_of_typ (VarT(a1, BaseK))));
   end
 
 and elab_instexp env exp l =
-  (fun (s, p, zs, e) -> exp.at, env, s, zs, Some e, "InstE") <<<
+  (fun (s, p, zs, e) -> exp.at, env, s, zs, Some e, "InstE") <<< (* >>> (tuareg) *)
   let ExT(aks, t), p, zs1, e = elab_exp env exp l in
   let t', zs2, e' = instantiate (add_typs aks env) t e in
   ExT(aks, t'), p, zs1 @ zs2, e'

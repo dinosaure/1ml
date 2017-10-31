@@ -2,7 +2,7 @@
  * (c) 2014 Andreas Rossberg
  *)
 
-open Types
+open Onemel_types
 
 module VarMap = Map.Make(String)
 
@@ -35,7 +35,7 @@ let domain_val env = domain env.var
 
 let freshen_var env a =
   if VarMap.mem a env.typ
-  then Fomega.rename_for (domain_typ env) a
+  then Onemel_fomega.rename_for (domain_typ env) a
   else a
 
 let freshen_vars env aks =

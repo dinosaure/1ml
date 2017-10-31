@@ -12,7 +12,7 @@ type env = value Env.t
 
 and exp =
   | VarE of var
-  | PrimE of Prim.const
+  | PrimE of Onemel_prim.const
   | IfE of exp * exp * exp
   | LamE of var * exp
   | AppE of exp * exp
@@ -22,7 +22,7 @@ and exp =
   | LetE of exp * var * exp
 
 and value =
-  | PrimV of Prim.const
+  | PrimV of Onemel_prim.const
   | TupV of value list
   | FunV of env * var * exp
   | RecV of value option ref

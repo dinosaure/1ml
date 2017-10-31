@@ -3,23 +3,23 @@
  *)
 
 {
-open Parser
+open Onemel_parser
 
 type pos = {file : string; line : int; column : int}
 type region = {left : pos; right : pos}
 
 let convert_pos pos =
-  { Source.file = pos.Lexing.pos_fname;
-    Source.line = pos.Lexing.pos_lnum;
-    Source.column = pos.Lexing.pos_cnum - pos.Lexing.pos_bol
+  { Onemel_source.file = pos.Lexing.pos_fname;
+    Onemel_source.line = pos.Lexing.pos_lnum;
+    Onemel_source.column = pos.Lexing.pos_cnum - pos.Lexing.pos_bol
   }
 
 let region lexbuf =
   let left = convert_pos (Lexing.lexeme_start_p lexbuf) in
   let right = convert_pos (Lexing.lexeme_end_p lexbuf) in 
-  {Source.left = left; Source.right = right}
+  {Onemel_source.left = left; Onemel_source.right = right}
 
-let error lexbuf m = raise (Source.Error (region lexbuf, m))
+let error lexbuf m = raise (Onemel_source.Error (region lexbuf, m))
 let error_nest start lexbuf m =
   lexbuf.Lexing.lex_start_p <- start;
   error lexbuf m

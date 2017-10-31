@@ -3,8 +3,8 @@
  */
 
 %{
-open Source
-open Syntax
+open Onemel_source
+open Onemel_syntax
 
 let position_to_pos position =
   { file = position.Lexing.pos_fname;
@@ -22,7 +22,7 @@ let at () =
 let ati i =
   positions_to_region (Parsing.rhs_start_pos i) (Parsing.rhs_end_pos i)
 
-let parse_error s = raise (Source.Error (Source.nowhere_region, s))
+let parse_error s = raise (Onemel_source.Error (Onemel_source.nowhere_region, s))
 %}
 
 %token TRUE FALSE HOLE PRIMITIVE
@@ -44,7 +44,7 @@ let parse_error s = raise (Source.Error (Source.nowhere_region, s))
 %token<int> NUM
 
 %start prog
-%type<Syntax.exp> prog
+%type<Onemel_syntax.exp> prog
 
 %%
 
@@ -246,15 +246,15 @@ atexp :
   | HOLE
     { TypE(HoleT@@at())@@at() }
   | PRIMITIVE TEXT
-    { match Prim.fun_of_string $2 with
-      | Some f -> PrimE(Prim.FunV f)@@at()
+    { match Onemel_prim.fun_of_string $2 with
+      | Some f -> PrimE(Onemel_prim.FunV f)@@at()
       | None -> parse_error ("unknown primitive \"" ^ $2 ^ "\"") }
   | NUM
-    { PrimE(Prim.IntV($1))@@at() }
+    { PrimE(Onemel_prim.IntV($1))@@at() }
   | CHAR
-    { PrimE(Prim.CharV($1))@@at() }
+    { PrimE(Onemel_prim.CharV($1))@@at() }
   | TEXT
-    { PrimE(Prim.TextV($1))@@at() }
+    { PrimE(Onemel_prim.TextV($1))@@at() }
   | LBRACE bind RBRACE
     { StrE($2)@@at() }
   | LPAR RPAR

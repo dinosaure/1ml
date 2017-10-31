@@ -5,10 +5,10 @@
 (* Syntax *)
 
 type level = int
-type lab = Fomega.lab
-type var = Fomega.var
+type lab = Onemel_fomega.lab
+type var = Onemel_fomega.var
 
-module VarSet = Fomega.VarSet
+module VarSet = Onemel_fomega.VarSet
 type varset = VarSet.t
 
 type 'a row = (lab * 'a) list
@@ -28,7 +28,7 @@ type kind =
 
 type typ =
   | VarT of var * kind
-  | PrimT of Prim.typ
+  | PrimT of Onemel_prim.typ
   | StrT of typ row
   | FunT of (var * kind) list * typ * extyp * feff
   | TypT of extyp
@@ -51,7 +51,7 @@ and undet =
   { id : int;
     mutable level : level;
     mutable vars : varset;
-    mutable il : Fomega.typ lazy_t option
+    mutable il : Onemel_fomega.typ lazy_t option
   }
 
 

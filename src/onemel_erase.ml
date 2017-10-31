@@ -2,10 +2,12 @@
  * (c) 2014 Andreas Rossberg
  *)
 
-open Types
-open Env
+open Onemel_types
+open Onemel_env
 
 let rec erase_row erase = map_row erase
+
+module IL = Onemel_il
 
 let rec erase_kind = function
   | BaseK -> IL.BaseK

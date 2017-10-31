@@ -2,10 +2,11 @@
  * (c) 2014 Andreas Rossberg
  *)
 
-open Types
-open Env
-open Erase
+open Onemel_types
+open Onemel_env
+open Onemel_erase
 
+module Lib = Onemel_lib
 
 (* Errors *)
 
@@ -43,6 +44,8 @@ let rec string_of_error = function
 
 (* Materialization *)
 
+module IL = Onemel_il
+
 let rec materialize_typ = function
   | StrT(r) -> IL.TupE(map_row materialize_typ r)
   | TypT(s) -> IL.LamE("_", erase_extyp s, IL.TupE[])
@@ -78,7 +81,7 @@ let lift_warn at t env zs =
         u.vars <- VarSet.inter u.vars dom;
         if not (IdSet.mem u.id !warned_already) && occurs_typ u t then (
           let names = String.concat ", " (VarSet.elements local) in
-          Source.warn at (
+          Onemel_source.warn at (
             "undetermined type " ^ string_of_typ (InferT z) ^
             " local to type " ^ names ^ " in type " ^ string_of_typ t
           )
@@ -90,6 +93,9 @@ let lift_warn at t env zs =
 
 
 (* Subtyping *)
+
+module Trace = Onemel_trace
+module Env = Onemel_env
 
 let resolve_typ z t =
   Trace.sub (lazy ("[resolve_typ] z = " ^ string_of_norm_typ (InferT(z))));

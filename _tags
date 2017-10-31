@@ -1,3 +1,4 @@
 true: bin_annot, debug
 
 <src>: include
+<*/*.{ml,mli,byte,native}>: package(malfunction)

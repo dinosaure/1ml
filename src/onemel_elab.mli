@@ -6,7 +6,7 @@
 
 exception Error of string
 
-val elab : Env.env -> Syntax.exp -> Types.extyp * Types.eff * Fomega.exp
+val elab : Onemel_env.env -> Onemel_syntax.exp -> Onemel_types.extyp * Onemel_types.eff * Onemel_fomega.exp
 
 
 (* Flags *)

@@ -2,10 +2,10 @@
  * (c) 2014 Andreas Rossberg
  *)
 
-include Fomega
+include Onemel_fomega
 
-let eta_typrow a r = Types.map_rowi (fun l _ -> DotT(VarT(a), l)) r
-let eta_exprow x r = Types.map_rowi (fun l _ -> DotE(VarE(x), l)) r
+let eta_typrow a r = Onemel_types.map_rowi (fun l _ -> DotT(VarT(a), l)) r
+let eta_exprow x r = Onemel_types.map_rowi (fun l _ -> DotE(VarE(x), l)) r
 
 let arrK(ks, k) = List.fold_right (fun ki k -> ArrK(ki, k)) ks k
 

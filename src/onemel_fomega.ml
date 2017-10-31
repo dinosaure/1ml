@@ -16,7 +16,7 @@ type kind =
 
 type typ =
   | VarT of var
-  | PrimT of Prim.typ
+  | PrimT of Onemel_prim.typ
   | ArrT of typ * typ
   | ProdT of typ row
   | AllT of var * kind * typ
@@ -30,7 +30,7 @@ type typ =
 
 type exp =
   | VarE of var
-  | PrimE of Prim.const
+  | PrimE of Onemel_prim.const
   | IfE of exp * exp * exp
   | LamE of var * typ * exp
   | AppE of exp * exp
@@ -227,14 +227,14 @@ let rec norm_exp = function
   | PrimE(c) -> PrimE(c)
   | IfE(e1, e2, e3) ->
     (match norm_exp e1 with
-    | PrimE(Prim.BoolV(b)) -> norm_exp (if b then e2 else e3)
+    | PrimE(Onemel_prim.BoolV(b)) -> norm_exp (if b then e2 else e3)
     | _ -> raise (Error "IfE")
     )
   | LamE(x, t, e) -> LamE(x, t, e)
   | AppE(e1, e2) ->
     (match norm_exp e1, norm_exp e2 with
     | LamE(x, t, e), v2 -> norm_exp (subst_exp [x, v2] e)
-    | PrimE(Prim.FunV f), v2 -> val_of_consts (f.Prim.fn (consts_of_val v2))
+    | PrimE(Onemel_prim.FunV f), v2 -> val_of_consts (f.Onemel_prim.fn (consts_of_val v2))
     | _ -> raise (Error "AppE")
     )
   | TupE(er) -> TupE(norm_row norm_exp er)
@@ -336,25 +336,25 @@ let rec infer_typ env = function
 and check_typ env t k s = if infer_typ env t <> k then raise (Error s)
 
 let infer_prim_typ = function
-  | Prim.VarT -> VarT("a")
+  | Onemel_prim.VarT -> VarT("a")
   | t -> PrimT(t)
 
 let infer_prim_typs = function
   | [t] -> infer_prim_typ t
   | ts -> ProdT(tup_row (List.map infer_prim_typ ts))
 
-let infer_prim_fun {Prim.typ = ts1, ts2} =
+let infer_prim_fun {Onemel_prim.typ = ts1, ts2} =
   ArrT(infer_prim_typs ts1, infer_prim_typs ts2)
 
 let infer_const = function
-  | Prim.FunV(f) -> infer_prim_fun f
-  | c -> PrimT(Prim.typ_of_const c)
+  | Onemel_prim.FunV(f) -> infer_prim_fun f
+  | c -> PrimT(Onemel_prim.typ_of_const c)
 
 let rec infer_exp env = function
   | VarE(x) -> lookup_val x env
   | PrimE(c) -> infer_const c
   | IfE(e1, e2, e3) ->
-    check_exp env e1 (PrimT(Prim.BoolT)) "IfE1";
+    check_exp env e1 (PrimT(Onemel_prim.BoolT)) "IfE1";
     let t = infer_exp env e2 in
     check_exp env e3 t "IfE";
     t
@@ -434,7 +434,7 @@ let rec string_of_kind = function
 
 let rec string_of_typ = function
   | VarT(a) -> a
-  | PrimT(t) -> Prim.string_of_typ t
+  | PrimT(t) -> Onemel_prim.string_of_typ t
   | ArrT(t1, t2) -> "(" ^ string_of_typ t1 ^ " -> " ^ string_of_typ t2 ^ ")"
   | ProdT[] -> "1"
   | ProdT(tr) -> "{" ^ string_of_row " : " string_of_typ tr ^ "}"
@@ -455,7 +455,7 @@ let rec string_of_typ = function
 
 let rec string_of_exp = function
   | VarE(x) -> x
-  | PrimE(c) -> Prim.string_of_const c
+  | PrimE(c) -> Onemel_prim.string_of_const c
   | IfE(e1, e2, e3) ->
     "(if " ^ string_of_exp e1 ^ " then " ^ string_of_exp e2 ^
       " else " ^ string_of_exp e3 ^ ")"

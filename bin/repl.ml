@@ -29,8 +29,8 @@ let parse name source =
     {lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = name};
   try Parser.prog Lexer.token lexbuf with Source.Error (region, s) ->
     let region' = if region <> Source.nowhere_region then region else
-      {Source.left = Lexer.convert_pos lexbuf.Lexing.lex_start_p;
-       Source.right = Lexer.convert_pos lexbuf.Lexing.lex_curr_p} in
+      {Onemel.Source.left = Onemel.Lexer.convert_pos lexbuf.Lexing.lex_start_p;
+       Onemel.Source.right = Onemel.Lexer.convert_pos lexbuf.Lexing.lex_curr_p} in
     raise (Source.Error (region', s))
 
 let env = ref Env.empty

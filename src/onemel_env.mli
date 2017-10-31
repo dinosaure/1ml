@@ -2,7 +2,7 @@
  * (c) 2014 Andreas Rossberg
  *)
 
-open Types
+open Onemel_types
 
 type env
 

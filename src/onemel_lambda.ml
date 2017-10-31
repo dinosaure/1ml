@@ -12,7 +12,7 @@ type env = value Env.t
 
 and exp =
   | VarE of var
-  | PrimE of Prim.const
+  | PrimE of Onemel_prim.const
   | IfE of exp * exp * exp
   | LamE of var * exp
   | AppE of exp * exp
@@ -22,7 +22,7 @@ and exp =
   | LetE of exp * var * exp
 
 and value =
-  | PrimV of Prim.const
+  | PrimV of Onemel_prim.const
   | TupV of value list
   | FunV of env * var * exp
   | RecV of value option ref
@@ -31,7 +31,7 @@ and value =
 (* String conversion *)
 
 let rec string_of_value = function
-  | PrimV(c) -> Prim.string_of_const c
+  | PrimV(c) -> Onemel_prim.string_of_const c
   | TupV(vs) -> "[" ^ String.concat ", " (List.map string_of_value vs) ^ "]"
   | FunV(env, x, e) -> "(\\" ^ x ^ "...)"
   | RecV(r) ->
@@ -69,14 +69,14 @@ and eval' env = function
   | PrimE(c) -> PrimV(c)
   | IfE(e1, e2, e3) ->
     (match eval env e1 with
-    | PrimV(Prim.BoolV(b)) -> eval env (if b then e2 else e3)
+    | PrimV(Onemel_prim.BoolV(b)) -> eval env (if b then e2 else e3)
     | v -> raise (Error ("IfE: " ^ string_of_value v))
     )
   | LamE(x, e) -> FunV(env, x, e)
   | AppE(e1, e2) ->
     (match eval env e1, eval env e2 with
     | FunV(env', x, e), v2 -> eval (Env.add x v2 env') e
-    | PrimV(Prim.FunV f), v2 -> value_of_consts (f.Prim.fn (consts_of_value v2))
+    | PrimV(Onemel_prim.FunV f), v2 -> value_of_consts (f.Onemel_prim.fn (consts_of_value v2))
     | v1, _ -> raise (Error ("AppE1: " ^ string_of_value v1))
     )
   | TupE(es) -> TupV(List.map (eval env) es)

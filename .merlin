@@ -4,4 +4,4 @@ S bin
 B _build/src
 B _build/bin
 
-PKG topkg
+PKG topkg malfunction
